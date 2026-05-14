@@ -1,12 +1,9 @@
 fastapi
 uvicorn
-python-dotenv
 sqlalchemy
 psycopg2-binary
-redis
-requests
+configparser
 google-generativeai
-sentence-transformers
 qdrant-client
 loguru
-pydantic
+python-multipart
