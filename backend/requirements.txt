@@ -7,3 +7,4 @@ google-generativeai
 qdrant-client
 loguru
 python-multipart
+genai
