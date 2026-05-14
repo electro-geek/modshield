@@ -4,7 +4,7 @@ import type { OnAppInstallRequest, TriggerResponse } from '@devvit/web/shared';
 export const triggers = new Hono();
 
 // Change this to your public URL (e.g. ngrok) for production
-const BACKEND_URL = 'http://localhost:8000/api';
+const BACKEND_URL = 'https://modshield.vercel.app/api';
 
 triggers.post('/on-app-install', async (c) => {
   const input = await c.req.json<OnAppInstallRequest>();
