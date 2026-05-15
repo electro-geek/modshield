@@ -1,25 +1,24 @@
-import warnings
-warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
-import google.generativeai as genai
 import os
+from google import genai
 from configparser import ConfigParser
+import json
+import re
 
 class AIReasoningEngine:
     def __init__(self, api_key=None):
         self.api_key = api_key
         if self.api_key and self.api_key != "your_gemini_key":
             try:
-                genai.configure(api_key=self.api_key)
-                # Use 'gemini-1.5-flash' as primary, it's faster and cheaper
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
+                # Using the new google-genai SDK
+                self.client = genai.Client(api_key=self.api_key)
             except Exception as e:
-                print(f"Error initializing Gemini Flash: {e}")
-                self.model = None
+                print(f"Error initializing Gemini Client: {e}")
+                self.client = None
         else:
-            self.model = None
+            self.client = None
 
     def generate_moderation_suggestion(self, post_title, post_content, scores):
-        if not self.model:
+        if not self.client:
             return {
                 "suggested_action": "review",
                 "reasoning": "AI model not configured. Scores: " + str(scores)
@@ -46,22 +45,28 @@ class AIReasoningEngine:
 
         try:
             try:
-                response = self.model.generate_content(prompt)
+                # Call generate_content using the new client
+                response = self.client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=prompt
+                )
             except Exception as e:
-                if "404" in str(e) and "gemini-1.5-flash" in str(e):
-                    print("Gemini 1.5 Flash 404, trying gemini-pro fallback...")
-                    fallback_model = genai.GenerativeModel('gemini-pro')
-                    response = fallback_model.generate_content(prompt)
+                # Keep fallback logic for 404s or unsupported model errors
+                if "404" in str(e) or "not found" in str(e).lower():
+                    print(f"Primary model error: {e}. Trying gemini-pro fallback...")
+                    response = self.client.models.generate_content(
+                        model='gemini-pro',
+                        contents=prompt
+                    )
                 else:
                     raise e
 
             # Simple extraction of JSON from response
             text = response.text
-            import json
-            import re
             json_match = re.search(r'\{.*\}', text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
+            
             return {"suggested_action": "review", "reasoning": "Could not parse AI response"}
         except Exception as e:
             print(f"Error in AI reasoning: {e}")

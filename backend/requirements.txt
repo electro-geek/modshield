@@ -3,7 +3,7 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 configparser
-google-generativeai>=0.7.2
+google-genai
 qdrant-client
 loguru
 python-multipart
