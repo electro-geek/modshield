@@ -43,24 +43,36 @@ class AIReasoningEngine:
         }}
         """
 
-        try:
+        # List of candidate models to try in order of preference
+        candidate_models = [
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-latest',
+            'gemini-1.5-pro',
+            'gemini-pro'
+        ]
+
+        last_error = None
+        response = None
+
+        for model_name in candidate_models:
             try:
-                # Call generate_content using the new client
+                print(f"Attempting to use model: {model_name}")
                 response = self.client.models.generate_content(
-                    model='gemini-1.5-flash',
+                    model=model_name,
                     contents=prompt
                 )
+                if response:
+                    print(f"Successfully used model: {model_name}")
+                    break
             except Exception as e:
-                # Keep fallback logic for 404s or unsupported model errors
-                if "404" in str(e) or "not found" in str(e).lower():
-                    print(f"Primary model error: {e}. Trying gemini-pro fallback...")
-                    response = self.client.models.generate_content(
-                        model='gemini-pro',
-                        contents=prompt
-                    )
-                else:
-                    raise e
+                last_error = e
+                print(f"Model {model_name} failed: {e}")
+                continue
 
+        if not response:
+            return {"suggested_action": "review", "reasoning": f"All AI models failed. Last error: {str(last_error)}"}
+
+        try:
             # Simple extraction of JSON from response
             text = response.text
             json_match = re.search(r'\{.*\}', text, re.DOTALL)
@@ -69,5 +81,5 @@ class AIReasoningEngine:
             
             return {"suggested_action": "review", "reasoning": "Could not parse AI response"}
         except Exception as e:
-            print(f"Error in AI reasoning: {e}")
-            return {"suggested_action": "review", "reasoning": f"Error: {str(e)}"}
+            print(f"Error in AI reasoning parsing: {e}")
+            return {"suggested_action": "review", "reasoning": f"Error parsing: {str(e)}"}
