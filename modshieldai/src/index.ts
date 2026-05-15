@@ -6,6 +6,8 @@ import { forms } from './routes/forms';
 import { menu } from './routes/menu';
 import { triggers } from './routes/triggers';
 
+// Remove Devvit.configure entirely — not needed for @devvit/web
+
 const app = new Hono();
 const internal = new Hono();
 

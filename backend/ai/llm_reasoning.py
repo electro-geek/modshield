@@ -8,8 +8,13 @@ class AIReasoningEngine:
     def __init__(self, api_key=None):
         self.api_key = api_key
         if self.api_key and self.api_key != "your_gemini_key":
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            try:
+                genai.configure(api_key=self.api_key)
+                # Use 'gemini-1.5-flash' as primary, it's faster and cheaper
+                self.model = genai.GenerativeModel('gemini-1.5-flash')
+            except Exception as e:
+                print(f"Error initializing Gemini Flash: {e}")
+                self.model = None
         else:
             self.model = None
 
@@ -40,7 +45,16 @@ class AIReasoningEngine:
         """
 
         try:
-            response = self.model.generate_content(prompt)
+            try:
+                response = self.model.generate_content(prompt)
+            except Exception as e:
+                if "404" in str(e) and "gemini-1.5-flash" in str(e):
+                    print("Gemini 1.5 Flash 404, trying gemini-pro fallback...")
+                    fallback_model = genai.GenerativeModel('gemini-pro')
+                    response = fallback_model.generate_content(prompt)
+                else:
+                    raise e
+
             # Simple extraction of JSON from response
             text = response.text
             import json

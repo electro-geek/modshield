@@ -37,7 +37,13 @@
     "dev": "vite build --watch"
   },
   "permissions": {
-    "reddit": true
+    "reddit": true,
+    "http": {
+      "domains": [
+        "modshield.vercel.app",
+        "modshield-api.vercel.app"
+      ]
+    }
   },
   "dev": {
     "subreddit": "modshieldai_dev"
